@@ -46,8 +46,8 @@ public:
      */
     static StatusOr<std::string> getCharsetbyCollation(const std::string& collationName);
 
-    static std::vector<std::string> supportCharset;
-    static std::vector<std::string> supportCollation;
+    static std::set<std::string> supportCharset;
+    static std::set<std::string> supportCollation;
 
     static std::map<std::string, CharsetToCollation> charsetToCollation;
 };

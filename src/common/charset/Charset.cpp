@@ -8,8 +8,8 @@
 
 namespace nebula {
 
-std::vector<std::string> CharsetInfo::supportCharset = {"utf8"};
-std::vector<std::string> CharsetInfo::supportCollation = {"utf8_bin"};
+std::set<std::string> CharsetInfo::supportCharset = {"utf8"};
+std::set<std::string> CharsetInfo::supportCollation = {"utf8_bin"};
 
 std::map<std::string, CharsetInfo::CharsetToCollation> CharsetInfo::charsetToCollation = {
     {"utf8", {"utf8", "utf8_bin", {"utf8_bin"}, "UTF-8 Unicode", 4}}
@@ -28,7 +28,7 @@ Status CharsetInfo::isSupportCharset(const std::string& charsetName) {
 Status CharsetInfo::isSupportCollate(const std::string& collateName) {
     for (auto& sc : supportCollation) {
         if (!sc.compare(collateName)) {
-                return Status::OK();
+            return Status::OK();
         }
     }
     return Status::Error("Collation `%s' not support", collateName.c_str());

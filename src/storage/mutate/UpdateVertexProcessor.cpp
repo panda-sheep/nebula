@@ -309,7 +309,11 @@ std::string UpdateVertexProcessor::updateAndWriteBack(const PartitionID partId,
 cpp2::ErrorCode UpdateVertexProcessor::checkAndBuildContexts(
         const cpp2::UpdateVertexRequest& req) {
     if (this->expCtx_ == nullptr) {
-        this->expCtx_ = std::make_unique<ExpressionContext>();
+        auto spaceCollate = this->schemaMan_->toSpaceCollate(spaceId_);
+        if (!spaceCollate.ok()) {
+             return cpp2::ErrorCode::E_INVALID_UPDATER;
+        }
+        this->expCtx_ = std::make_unique<ExpressionContext>(spaceCollate.value());
     }
 
     // return columns

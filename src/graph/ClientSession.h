@@ -9,6 +9,7 @@
 
 #include "base/Base.h"
 #include "time/Duration.h"
+#include "graph/GraphFlags.h"
 
 /**
  * A ClientSession holds the context informations of a session opened by a client.
@@ -31,13 +32,26 @@ public:
         return space_;
     }
 
-    void setSpace(const std::string &name, GraphSpaceID space) {
+    void setSpace(const std::string &name,
+                  GraphSpaceID space,
+                  const std::string &charsetName,
+                  const std::string &collateName) {
         spaceName_ = name;
         space_ = space;
+        spaceCharset_ = charsetName;
+        spaceCollate_ = collateName;
     }
 
     const std::string& spaceName() const {
         return spaceName_;
+    }
+
+    const std::string& spaceCharset() const {
+        return spaceCharset_;
+    }
+
+    const std::string& spaceCollate() const {
+        return spaceCollate_;
     }
 
     uint64_t idleSeconds() const;
@@ -66,6 +80,8 @@ private:
     GraphSpaceID        space_{-1};
     time::Duration      idleDuration_;
     std::string         spaceName_;
+    std::string         spaceCharset_ = FLAGS_default_charset;
+    std::string         spaceCollate_ = FLAGS_default_collate;
     std::string         user_;
 };
 

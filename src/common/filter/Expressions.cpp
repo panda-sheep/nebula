@@ -9,6 +9,7 @@
 #include "base/Cord.h"
 #include "filter/Expressions.h"
 #include "filter/FunctionManager.h"
+#include "charset/Charset.h"
 
 
 #define THROW_IF_NO_SPACE(POS, END, REQUIRE)                                        \
@@ -911,19 +912,47 @@ OptVariantType RelationalExpression::eval(Getters &getters) const {
 
     switch (op_) {
         case LT:
-            return OptVariantType(l < r);
+            if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpLT(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
+            } else {
+                return OptVariantType(l < r);
+            }
         case LE:
-            return OptVariantType(l <= r);
+            if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpLE(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
+            } else {
+                return OptVariantType(l <= r);
+            }
         case GT:
-            return OptVariantType(l > r);
+            if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpGT(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
+            } else {
+                return OptVariantType(l > r);
+            }
         case GE:
-            return OptVariantType(l >= r);
+            if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpGE(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
+            } else {
+                return OptVariantType(l >= r);
+            }
         case EQ:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(
                         almostEqual(asDouble(l), asDouble(r)));
                 }
+            } else if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpEQ(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
             }
             return OptVariantType(l == r);
         case NE:
@@ -932,6 +961,10 @@ OptVariantType RelationalExpression::eval(Getters &getters) const {
                     return OptVariantType(
                         !almostEqual(asDouble(l), asDouble(r)));
                 }
+            } else if (isString(l) && isString(r)) {
+                return CharsetInfo::nebulaStrCmpNE(context_->spaceCollate(),
+                                                   asString(l).c_str(),
+                                                   asString(r).c_str());
             }
             return OptVariantType(l != r);
     }

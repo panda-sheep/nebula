@@ -20,7 +20,8 @@ InsertVertexExecutor::InsertVertexExecutor(Sentence *sentence,
 
 
 Status InsertVertexExecutor::prepare() {
-    expCtx_ = std::make_unique<ExpressionContext>();
+    auto spaceCollate = ectx()->rctx()->session()->spaceCollate();
+    expCtx_ = std::make_unique<ExpressionContext>(spaceCollate);
     expCtx_->setStorageClient(ectx()->getStorageClient());
     return Status::OK();
 }

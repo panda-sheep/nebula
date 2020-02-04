@@ -493,7 +493,7 @@ TEST_F(ExpressionTest, InputReference) {
         ASSERT_TRUE(parsed.ok()) << parsed.status();
         auto *expr = getFilterExpr(parsed.value().get());
         ASSERT_NE(nullptr, expr);
-        auto ctx = std::make_unique<ExpressionContext>();
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");
         Getters getters;
         getters.getInputProp = [] (auto &prop) -> VariantType {
             if (prop == "name") {
@@ -515,7 +515,7 @@ TEST_F(ExpressionTest, InputReference) {
         ASSERT_TRUE(parsed.ok()) << parsed.status();
         auto *expr = getFilterExpr(parsed.value().get());
         ASSERT_NE(nullptr, expr);
-        auto ctx = std::make_unique<ExpressionContext>();
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");
         Getters getters;
         getters.getInputProp = [] (auto &prop) -> VariantType {
             if (prop == "age") {
@@ -542,7 +542,7 @@ TEST_F(ExpressionTest, SourceTagReference) {
         ASSERT_TRUE(parsed.ok()) << parsed.status();
         auto *expr = getFilterExpr(parsed.value().get());
         ASSERT_NE(nullptr, expr);
-        auto ctx = std::make_unique<ExpressionContext>();
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");
         Getters getters;
         getters.getSrcTagProp = [] (auto &tag, auto &prop) -> VariantType {
             if (tag == "person" && prop == "name") {
@@ -570,7 +570,7 @@ TEST_F(ExpressionTest, EdgeReference) {
         ASSERT_TRUE(parsed.ok());
         auto *expr = getFilterExpr(parsed.value().get());
         ASSERT_NE(nullptr, expr);
-        auto ctx = std::make_unique<ExpressionContext>();
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");
         Getters getters;
         getters.getAliasProp = [] (auto &, auto &prop) -> VariantType {
             if (prop == "cur_time") {
@@ -606,7 +606,7 @@ TEST_F(ExpressionTest, FunctionCall) {
         ASSERT_NE(nullptr, expr);                                       \
         auto decoded = Expression::decode(Expression::encode(expr));    \
         ASSERT_TRUE(decoded.ok()) << decoded.status();                  \
-        auto ctx = std::make_unique<ExpressionContext>();               \
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");               \
         decoded.value()->setContext(ctx.get());                         \
         auto status = decoded.value()->prepare();                       \
         ASSERT_TRUE(status.ok()) << status;                             \
@@ -689,7 +689,7 @@ TEST_F(ExpressionTest, StringFunctionCall) {
         ASSERT_NE(nullptr, expr);                                       \
         auto decoded = Expression::decode(Expression::encode(expr));    \
         ASSERT_TRUE(decoded.ok()) << decoded.status();                  \
-        auto ctx = std::make_unique<ExpressionContext>();               \
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");               \
         decoded.value()->setContext(ctx.get());                         \
         auto status = decoded.value()->prepare();                       \
         ASSERT_TRUE(status.ok()) << status;                             \
@@ -771,7 +771,7 @@ TEST_F(ExpressionTest, InvalidExpressionTest) {
         ASSERT_NE(nullptr, expr);                                     \
         auto decoded = Expression::decode(Expression::encode(expr));  \
         ASSERT_TRUE(decoded.ok()) << decoded.status();                \
-        auto ctx = std::make_unique<ExpressionContext>();             \
+        auto ctx = std::make_unique<ExpressionContext>("utf8_bin");             \
         decoded.value()->setContext(ctx.get());                       \
         auto status = decoded.value()->prepare();                     \
         ASSERT_TRUE(status.ok()) << status;                           \

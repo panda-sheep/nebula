@@ -138,7 +138,7 @@ bool MetaClient::loadData() {
         return false;
     }
 
-    auto ret = listSpaces().get();
+    auto ret = listSpaceSchemas().get();
     if (!ret.ok()) {
         LOG(ERROR) << "List space failed, status:" << ret.status();
         return false;
@@ -154,8 +154,10 @@ bool MetaClient::loadData() {
     decltype(spaceTagIndexById_)     spaceTagIndexById;
     decltype(spaceAllEdgeMap_)       spaceAllEdgeMap;
 
-    for (auto space : ret.value()) {
-        auto spaceId = space.first;
+    for (auto spaceItem : ret.value()) {
+        auto spaceId = spaceItem.get_space_id();
+        auto properties = spaceItem.get_properties();
+        auto spaceName = properties.get_space_name();
         auto r = getPartsAlloc(spaceId).get();
         if (!r.ok()) {
             LOG(ERROR) << "Get parts allocation failed for spaceId " << spaceId
@@ -165,9 +167,12 @@ bool MetaClient::loadData() {
 
         auto spaceCache = std::make_shared<SpaceInfoCache>();
         auto partsAlloc = r.value();
-        spaceCache->spaceName = space.second;
+        spaceCache->spaceName = spaceName;
         spaceCache->partsOnHost_ = reverse(partsAlloc);
         spaceCache->partsAlloc_ = std::move(partsAlloc);
+        spaceCache->charset_ = properties.get_charset_name();
+        spaceCache->collate_ = properties.get_collate_name();
+
         VLOG(2) << "Load space " << spaceId
                 << ", parts num:" << spaceCache->partsAlloc_.size();
 
@@ -191,7 +196,7 @@ bool MetaClient::loadData() {
         }
 
         cache.emplace(spaceId, spaceCache);
-        spaceIndexByName.emplace(space.second, spaceId);
+        spaceIndexByName.emplace(spaceName, spaceId);
     }
     decltype(localCache_) oldCache;
     {
@@ -473,15 +478,6 @@ std::vector<HostAddr> MetaClient::to(const std::vector<nebula::cpp2::HostAddr>& 
     return hosts;
 }
 
-std::vector<SpaceIdName> MetaClient::toSpaceIdName(const std::vector<cpp2::IdName>& tIdNames) {
-    std::vector<SpaceIdName> idNames;
-    idNames.resize(tIdNames.size());
-    std::transform(tIdNames.begin(), tIdNames.end(), idNames.begin(), [](const auto& tin) {
-        return SpaceIdName(tin.id.get_space_id(), tin.name);
-    });
-    return idNames;
-}
-
 template<typename RESP>
 Status MetaClient::handleResponse(const RESP& resp) {
     switch (resp.get_code()) {
@@ -640,14 +636,14 @@ folly::Future<StatusOr<GraphSpaceID>> MetaClient::createSpace(SpaceMeta spaceMet
     return future;
 }
 
-folly::Future<StatusOr<std::vector<SpaceIdName>>> MetaClient::listSpaces() {
+folly::Future<StatusOr<std::vector<cpp2::SpaceItem>>> MetaClient::listSpaceSchemas() {
     cpp2::ListSpacesReq req;
-    folly::Promise<StatusOr<std::vector<SpaceIdName>>> promise;
+    folly::Promise<StatusOr<std::vector<cpp2::SpaceItem>>> promise;
     auto future = promise.getFuture();
     getResponse(std::move(req), [] (auto client, auto request) {
                     return client->future_listSpaces(request);
                 }, [this] (cpp2::ListSpacesResp&& resp) -> decltype(auto) {
-                    return this->toSpaceIdName(resp.get_spaces());
+                    return std::move(resp.get_spaces());
                 }, std::move(promise));
     return future;
 }
@@ -750,6 +746,34 @@ MetaClient::getSpaceIdByNameFromCache(const std::string& name) {
     auto it = spaceIndexByName_.find(name);
     if (it != spaceIndexByName_.end()) {
         return it->second;
+    }
+    return Status::SpaceNotFound();
+}
+
+
+StatusOr<std::string>
+MetaClient::getSpaceCharsetByIdFromCache(GraphSpaceID spaceId) {
+    if (!ready_) {
+        return Status::Error("Not ready!");
+    }
+    folly::RWSpinLock::ReadHolder holder(localCacheLock_);
+    auto it = localCache_.find(spaceId);
+    if (it != localCache_.end()) {
+        return it->second->charset_;
+    }
+    return Status::SpaceNotFound();
+}
+
+
+StatusOr<std::string>
+MetaClient::getSpaceCollateByIdFromCache(GraphSpaceID spaceId) {
+    if (!ready_) {
+        return Status::Error("Not ready!");
+    }
+    folly::RWSpinLock::ReadHolder holder(localCacheLock_);
+    auto it = localCache_.find(spaceId);
+    if (it != localCache_.end()) {
+        return it->second->collate_;
     }
     return Status::SpaceNotFound();
 }

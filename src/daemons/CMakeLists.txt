@@ -63,6 +63,7 @@ nebula_add_executable(
         $<TARGET_OBJECTS:storage_client>
         $<TARGET_OBJECTS:meta_client>
         $<TARGET_OBJECTS:stats_obj>
+        $<TARGET_OBJECTS:charset_obj>
         $<TARGET_OBJECTS:time_obj>
         $<TARGET_OBJECTS:meta_thrift_obj>
         $<TARGET_OBJECTS:common_thrift_obj>
@@ -104,6 +105,7 @@ nebula_add_executable(
         $<TARGET_OBJECTS:storage_thrift_obj>
         $<TARGET_OBJECTS:meta_client>
         $<TARGET_OBJECTS:stats_obj>
+        $<TARGET_OBJECTS:charset_obj>
         $<TARGET_OBJECTS:time_obj>
         $<TARGET_OBJECTS:meta_thrift_obj>
         $<TARGET_OBJECTS:raftex_obj>

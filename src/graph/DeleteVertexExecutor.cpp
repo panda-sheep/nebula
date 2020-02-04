@@ -18,7 +18,8 @@ DeleteVertexExecutor::DeleteVertexExecutor(Sentence *sentence,
 
 Status DeleteVertexExecutor::prepare() {
     spaceId_ = ectx()->rctx()->session()->space();
-    expCtx_ = std::make_unique<ExpressionContext>();
+    auto spaceCollate = ectx()->rctx()->session()->spaceCollate();
+    expCtx_ = std::make_unique<ExpressionContext>(spaceCollate);
     expCtx_->setSpace(spaceId_);
     expCtx_->setStorageClient(ectx()->getStorageClient());
 

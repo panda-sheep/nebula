@@ -38,7 +38,8 @@ Status GoExecutor::prepare() {
 Status GoExecutor::prepareClauses() {
     DCHECK(sentence_ != nullptr);
     Status status;
-    expCtx_ = std::make_unique<ExpressionContext>();
+    auto spaceCollate = ectx()->rctx()->session()->spaceCollate();
+    expCtx_ = std::make_unique<ExpressionContext>(spaceCollate);
     expCtx_->setStorageClient(ectx()->getStorageClient());
 
     do {
@@ -46,6 +47,9 @@ Status GoExecutor::prepareClauses() {
         if (!status.ok()) {
             break;
         }
+        auto space = ectx()->rctx()->session()->space();
+        expCtx_->setSpace(space);
+
         status = prepareStep();
         if (!status.ok()) {
             break;

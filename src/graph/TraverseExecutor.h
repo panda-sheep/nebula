@@ -125,6 +125,7 @@ private:
     std::unique_ptr<Expression>     filterRewrite_;
     Expression                     *filter_{nullptr};
     std::string                     filterPushdown_;
+    std::string                     spaceCollate_;
 };
 
 class TraverseExecutor : public Executor {

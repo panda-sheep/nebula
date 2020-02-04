@@ -37,6 +37,8 @@ struct Getters {
 
 class ExpressionContext final {
 public:
+    explicit ExpressionContext(std::string spaceCollate) : spaceCollate_(spaceCollate) {}
+
     using EdgeInfo = boost::variant<std::string, EdgeType>;
     void addSrcTagProp(const std::string &tag, const std::string &prop) {
         tagMap_.emplace(tag, -1);
@@ -159,6 +161,14 @@ public:
         return space_;
     }
 
+    void setSpaceCollate(std::string spaceCollate) {
+        spaceCollate_ = spaceCollate;
+    }
+
+    std::string spaceCollate() {
+        return spaceCollate_;
+    }
+
     void print() const;
 
     bool isOverAllEdge() const { return overAll_; }
@@ -177,6 +187,7 @@ private:
     std::unordered_map<std::string, TagID>    tagMap_;
     bool                                      overAll_{false};
     GraphSpaceID                              space_;
+    std::string                               spaceCollate_;
     nebula::storage::StorageClient            *storageClient_{nullptr};
 };
 

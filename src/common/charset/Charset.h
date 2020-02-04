@@ -45,11 +45,38 @@ public:
      * Get the corresponding charset according to collation
      */
     static StatusOr<std::string> getCharsetbyCollation(const std::string& collationName);
+    /**
+     * Compare strings according to the collate of the specified locale
+     */
+    static StatusOr<int>
+    nebulaStrCmp(const std::string& collateName, const char* p1, const char* p2);
 
-    static std::set<std::string> supportCharset;
-    static std::set<std::string> supportCollation;
+    static StatusOr<bool>
+    nebulaStrCmpLT(const std::string& collateName, const char* p1, const char* p2);
 
-    static std::map<std::string, CharsetToCollation> charsetToCollation;
+    static StatusOr<bool>
+    nebulaStrCmpLE(const std::string& collateName, const char* p1, const char* p2);
+
+    static StatusOr<bool>
+    nebulaStrCmpGT(const std::string& collateName, const char* p1, const char* p2);
+
+    static StatusOr<bool>
+    nebulaStrCmpGE(const std::string& collateName, const char* p1, const char* p2);
+
+    static StatusOr<bool>
+    nebulaStrCmpEQ(const std::string& collateName, const char* p1, const char* p2);
+
+    static StatusOr<bool>
+    nebulaStrCmpNE(const std::string& collateName, const char* p1, const char* p2);
+
+
+    static std::unordered_set<std::string> supportCharset;
+
+    static std::unordered_set<std::string> supportCollation;
+
+    static std::unordered_map<std::string, CharsetToCollation> charsetToCollation;
+
+    static std::unordered_map<std::string, std::string> collateToLocale;
 };
 
 }   // namespace nebula

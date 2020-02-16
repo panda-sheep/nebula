@@ -642,7 +642,7 @@ folly::Future<StatusOr<std::vector<cpp2::SpaceItem>>> MetaClient::listSpaceSchem
     auto future = promise.getFuture();
     getResponse(std::move(req), [] (auto client, auto request) {
                     return client->future_listSpaces(request);
-                }, [this] (cpp2::ListSpacesResp&& resp) -> decltype(auto) {
+                }, [] (cpp2::ListSpacesResp&& resp) -> decltype(auto) {
                     return std::move(resp.get_spaces());
                 }, std::move(promise));
     return future;

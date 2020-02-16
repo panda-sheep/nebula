@@ -55,6 +55,14 @@ protected:
      */
     bool exprEval(Getters &getters);
 
+    /**
+      * Set spaceId for building Expression
+      */
+    void setSpaceId(GraphSpaceID spaceId) {
+        spaceId_ = spaceId;
+    }
+
+
 private:
     cpp2::ErrorCode decodeExpression(const std::string &filter);
 
@@ -65,6 +73,7 @@ private:
     cpp2::ErrorCode traversalExpression(const Expression *expr);
 
 protected:
+    GraphSpaceID                             spaceId_;
     meta::SchemaManager*                     schemaMan_{nullptr};
     meta::IndexManager*                      indexMan_{nullptr};
     std::unique_ptr<ExpressionContext>       expCtx_{nullptr};

@@ -146,7 +146,7 @@ StatusOr<GraphSpaceID> AdHocSchemaManager::toGraphSpaceID(folly::StringPiece spa
     }
 }
 
-StatusOr<std::string> AdHocSchemaManager::toSpaceCharset(GraphSpaceID space) {	
+StatusOr<std::string> AdHocSchemaManager::toSpaceCharset(GraphSpaceID space) {
     folly::RWSpinLock::ReadHolder rh(spaceLock_);
     auto it = spaceToCharsetCollate_.find(space);
     if (it ==spaceToCharsetCollate_.end()) {

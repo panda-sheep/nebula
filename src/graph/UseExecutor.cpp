@@ -36,7 +36,10 @@ void UseExecutor::execute() {
         auto spaceProp = spaceItem.get_properties();
         auto spaceCharset = spaceProp.get_charset_name();
         auto spaceCollate = spaceProp.get_collate_name();
-        ectx()->rctx()->session()->setSpace(*sentence_->space(), spaceId, spaceCharset, spaceCollate);
+        ectx()->rctx()->session()->setSpace(*sentence_->space(),
+                                            spaceId,
+                                            spaceCharset,
+                                            spaceCollate);
 
         FLOG_INFO("Graph space switched to `%s', space id: %d",
                    sentence_->space()->c_str(), spaceId);

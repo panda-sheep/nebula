@@ -54,7 +54,7 @@ Status CreateSpaceExecutor::prepare() {
         }
     }
 
-    // if charset and collate are not specified, set in meta
+    // if charset and collate are not specified, set use default
     if (!spaceMeta_.charsetName_.empty() && !spaceMeta_.collationName_.empty()) {
         retStatus = CharsetInfo::charsetAndCollateMatch(spaceMeta_.charsetName_,
                                                         spaceMeta_.collationName_);
@@ -75,6 +75,30 @@ Status CreateSpaceExecutor::prepare() {
         spaceMeta_.charsetName_ = std::move(retStatusOr.value());
     }
 
+    if (spaceMeta_.charsetName_.empty() && spaceMeta_.collationName_.empty()) {
+        std::string charsetName = FLAGS_default_charset;
+        folly::toLowerAscii(charsetName);
+        retStatus = CharsetInfo::isSupportCharset(charsetName);
+        if (!retStatus.ok()) {
+            return retStatus;
+        }
+
+        std::string collateName = FLAGS_default_collate;
+        folly::toLowerAscii(collateName);
+        retStatus = CharsetInfo::isSupportCollate(collateName);
+        if (!retStatus.ok()) {
+            return retStatus;
+        }
+
+        spaceMeta_.charsetName_ = std::move(charsetName);
+        spaceMeta_.collationName_ = std::move(collateName);
+
+        retStatus = CharsetInfo::charsetAndCollateMatch(spaceMeta_.charsetName_,
+                                                        spaceMeta_.collationName_);
+        if (!retStatus.ok()) {
+            return retStatus;
+        }
+    }
     return Status::OK();
 }
 

@@ -249,6 +249,7 @@ nebula_add_test(
         $<TARGET_OBJECTS:thread_obj>
         $<TARGET_OBJECTS:process_obj>
         $<TARGET_OBJECTS:gflags_man_obj>
+        $<TARGET_OBJECTS:charset_obj>
     LIBRARIES
         ${ROCKSDB_LIBRARIES}
         ${THRIFT_LIBRARIES}
@@ -356,6 +357,7 @@ nebula_add_executable(
         $<TARGET_OBJECTS:stats_obj>
         $<TARGET_OBJECTS:adHocSchema_obj>
         $<TARGET_OBJECTS:adHocIndex_obj>
+        $<TARGET_OBJECTS:charset_obj>
     LIBRARIES
         ${ROCKSDB_LIBRARIES}
         ${THRIFT_LIBRARIES}

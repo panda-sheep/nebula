@@ -83,6 +83,12 @@ CharsetInfo::nebulaStrCmp(const std::string& collateName, const char* p1, const 
         return Status::Error("Collation `%s' not support", collateName.c_str());
     }
 
+    // For unset LC_ALL, May occur "locale::facet::_S_create_c_locale name not valid"
+    std::string curLoc = setlocale(LC_ALL, NULL);
+    if (curLoc.empty()) {
+        setlocale(LC_ALL, "en_US.UTF-8");
+    }
+
     std::locale loc(iter->second);
     if (loc.name().empty()) {
         return Status::Error("The locale variable is empty");

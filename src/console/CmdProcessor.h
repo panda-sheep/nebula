@@ -40,11 +40,9 @@ private:
 
     void calColumnWidths(const cpp2::ExecutionResponse& resp,
                          std::vector<size_t>& widths,
-                         std::vector<std::string>& formats) const;
+                         std::vector<std::string>& formats);
 
-    bool convertCurrentSpaceStr(cpp2::ExecutionResponse& resp) const;
-
-    void printResult(cpp2::ExecutionResponse& resp) const;
+    void printResult(cpp2::ExecutionResponse& resp);
     void printHeader(const cpp2::ExecutionResponse& resp,
                      const std::vector<size_t>& widths) const;
     void printData(const cpp2::ExecutionResponse& resp,
@@ -55,6 +53,8 @@ private:
     void printTime() const;
 
     void normalize(folly::StringPiece &command);
+
+    std::string curSpaceCharset_;
 };
 
 }  // namespace graph

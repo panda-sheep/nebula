@@ -51,10 +51,9 @@ public:
     static StatusOr<std::string> getCharsetbyCollation(const std::string& collationName);
 
     /**
-     * Get the current space chareset string, only utf8 to unicode
+     * Get the number of characters in UTF8 charset`
      */
-    static StatusOr<std::u32string> getCurrentSpaceStr(std::locale &loc,
-                                                       const std::string& fromStr);
+    static size_t getUtf8Charlength(const std::string& str);
 
     /**
      * Compare strings according to the collate of the specified locale
@@ -87,8 +86,6 @@ public:
     static std::unordered_map<std::string, CharsetToCollation> charsetToCollation;
 
     static std::unordered_map<std::string, std::string> collateToLocale;
-
-    static std::unordered_map<std::string, std::string> charsetToLocale;
 };
 
 }   // namespace nebula

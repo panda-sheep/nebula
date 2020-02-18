@@ -24,16 +24,26 @@ namespace graph {
 void CmdProcessor::calColumnWidths(
         const cpp2::ExecutionResponse& resp,
         std::vector<size_t>& widths,
-        std::vector<std::string>& formats) const {
+        std::vector<std::string>& formats) {
     widths.clear();
     formats.clear();
 
     // Check column names first
     if (resp.get_column_names() != nullptr) {
         for (size_t i = 0; i < resp.get_column_names()->size(); i++) {
-            widths.emplace_back(resp.get_column_names()->at(i).size());
+            auto s1 = resp.get_column_names()->at(i);
+            auto byteLen = s1.size();
+            auto len = byteLen;
+            if (curSpaceCharset_.compare("utf8") == 0) {
+                auto charLen =  CharsetInfo::getUtf8Charlength(s1);
+                // One less byte when displaying Chinese characters
+                auto diff = (byteLen - charLen) / 2;
+                len -= diff;
+            }
+            widths.emplace_back(len);
         }
     }
+
     if (widths.size() == 0) {
         return;
     }
@@ -111,7 +121,16 @@ void CmdProcessor::calColumnWidths(
                     break;
                 }
                 case cpp2::ColumnValue::Type::str: {
-                    size_t len = col.get_str().size();
+                    size_t len = 0;
+                    auto st = col.get_str();
+                    auto byteLen = st.size();
+                    if (curSpaceCharset_.compare("utf8") == 0) {
+                        auto charLen = CharsetInfo::getUtf8Charlength(st);
+                        auto diff = (byteLen - charLen) / 2;
+                        len = byteLen - diff;
+                    } else {
+                        len = byteLen;
+                    }
                     if (widths[idx] < len) {
                         widths[idx] = len;
                         genFmt = true;
@@ -230,14 +249,10 @@ void CmdProcessor::calColumnWidths(
 #undef GET_VALUE_WIDTH
 
 
-void CmdProcessor::printResult(cpp2::ExecutionResponse& resp) const {
+void CmdProcessor::printResult(cpp2::ExecutionResponse& resp) {
     std::vector<size_t> widths;
     std::vector<std::string> formats;
 
-    auto ret = convertCurrentSpaceStr(resp);
-    if (!ret) {
-        return;
-    }
     calColumnWidths(resp, widths, formats);
 
     if (widths.size() == 0) {
@@ -270,85 +285,18 @@ void CmdProcessor::printHeader(
 
     size_t idx = 0;
     for (auto& cname : (*resp.get_column_names())) {
-        std::string fmt = folly::stringPrintf(" %%-%lds |", widths[idx++]);
+        auto len = widths[idx++];
+        if (curSpaceCharset_.compare("utf8") == 0) {
+            auto byteLen = cname.size();
+            auto charLen = CharsetInfo::getUtf8Charlength(cname);
+            auto diff = (byteLen - charLen) / 2;
+            len += diff;
+        }
+        std::string fmt = folly::stringPrintf(" %%-%lds |", len);
         std::cout << folly::stringPrintf(fmt.c_str(), cname.c_str());
     }
+
     std::cout << "\n";
-}
-
-
-bool CmdProcessor::convertCurrentSpaceStr(cpp2::ExecutionResponse& resp) const {
-    std::string curSpaceCharset;
-    auto *spaceCharset = resp.get_space_charset();
-    if (spaceCharset && !spaceCharset->empty()) {
-        curSpaceCharset = std::move(*spaceCharset);
-    } else {
-        curSpaceCharset = "utf8";
-    }
-    folly::toLowerAscii(curSpaceCharset);
-
-    // utf8 -> unicode
-    if (curSpaceCharset.compare("utf8") == 0) {
-        auto iter = CharsetInfo::charsetToLocale.find(curSpaceCharset);
-
-        // For character set is incomplete in locale
-        std::locale loc(iter->second);
-        if (!std::has_facet<std::ctype<char>>(loc)) {
-            std::cout << "[Error]:" << "Locale: " << iter->second
-                      << "current environment not support.\n";
-            return false;
-        }
-        // convert head
-        auto retColName = resp.get_column_names();
-        if (retColName != nullptr) {
-            std::vector<std::u32string> header;
-            for (auto &e : (*retColName)) {
-                auto ret = CharsetInfo::getCurrentSpaceStr(loc, e);
-                if (!ret.ok()) {
-                    std::cout <<  "[Error]:" <<ret.status().toString() << std::endl;
-                    return false;
-                }
-                header.push_back(ret.value());
-            }
-            resp.set_column_names(header);
-        }
-
-        // conver data
-        auto retRows = resp.get_rows();
-        if (retRows != nullptr) {
-            std::vector<cpp2::RowValue> rowsConv;
-
-            for (auto& row : (*retRows)) {
-                std::vector<cpp2::ColumnValue> rowConv;
-
-                auto columns = row.get_columns();
-                for (size_t i = 0; i < columns.size(); i++) {
-                    switch (columns[i].getType()) {
-                        case cpp2::ColumnValue::Type::str: {
-                            auto str = columns[i].get_str();
-                            auto ret = CharsetInfo::getCurrentSpaceStr(loc, str);
-                            if (!ret.ok()) {
-                                std::cout <<  "[Error]:" << ret.status().toString() << std::endl;
-                                return false;
-                            }
-                            rowConv.emplace_back();
-                            rowConv.back().set_str(ret.value());
-                            break;
-                        }
-                        default: {
-                            rowConv.push_back(columns[i]);
-                            break;
-                        }
-                    }
-                }
-
-                rowsConv.emplace_back();
-                rowsConv.back().set_columns(std::move(rowConv));
-            }
-            resp.set_rows(std::move(rowsConv));
-        }
-    }
-    return true;
 }
 
 
@@ -394,7 +342,16 @@ void CmdProcessor::printData(const cpp2::ExecutionResponse& resp,
                     break;
                 }
                 case cpp2::ColumnValue::Type::str: {
-                    PRINT_FIELD_VALUE(col.get_str().c_str());
+                    auto st = col.get_str();
+                    auto byteLen = st.size();
+                    auto len = widths[cIdx];
+                    if (curSpaceCharset_.compare("utf8") == 0) {
+                        auto charLen =  CharsetInfo::getUtf8Charlength(st);
+                        auto diff = (byteLen - charLen) / 2;
+                        len += diff;
+                    }
+                    std::string fmt = folly::stringPrintf(" %%-%lds |", len);
+                    std::cout << folly::stringPrintf(fmt.c_str(), col.get_str().c_str());
                     break;
                 }
                 case cpp2::ColumnValue::Type::timestamp: {
@@ -501,6 +458,14 @@ void CmdProcessor::processServerCmd(folly::StringPiece cmd) {
         } else {
             curSpaceName_ = "(none)";
         }
+        auto *spaceCharset = resp.get_space_charset();
+        if (spaceCharset && !spaceCharset->empty()) {
+            curSpaceCharset_ = std::move(*spaceCharset);
+        } else {
+            curSpaceCharset_ = "utf8";
+        }
+        folly::toLowerAscii(curSpaceCharset_);
+
         if (resp.get_rows() && !resp.get_rows()->empty()) {
             printResult(resp);
             std::cout << "Got " << resp.get_rows()->size()

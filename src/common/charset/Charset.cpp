@@ -20,12 +20,6 @@ std::unordered_map<std::string, std::string> CharsetInfo::collateToLocale = {
     {"utf8_bin", "en_US.UTF-8"}
 };
 
-
-std::unordered_map<std::string, std::string> CharsetInfo::charsetToLocale = {
-    {"utf8", "en_US.UTF-8"}
-};
-
-
 Status CharsetInfo::isSupportCharset(const std::string& charsetName) {
     for (auto& sc : supportCharset) {
         if (!sc.compare(charsetName)) {
@@ -82,25 +76,26 @@ StatusOr<std::string> CharsetInfo::getCharsetbyCollation(const std::string& coll
 }
 
 
-StatusOr<std::u32string> CharsetInfo::getCurrentSpaceStr(std::locale &loc,
-                                                         const std::string& fromStr) {
-    typedef std::codecvt<char32_t, char, mbstate_t> convert_facet;
-    auto& f = std::use_facet<convert_facet>(loc);
-
-    std::mbstate_t mb = std::mbstate_t();
-    std::string input = fromStr;
-    std::u32string out(input.size(), '\0');
-    const char* from_next;
-    char32_t* to_next;
-    auto result = f.in(mb, &input[0], &input[input.size()], from_next,
-                       &out[0], &out[out.size()], to_next);
-
-    if (result == convert_facet::ok) {
-        out.resize(to_next - &out[0]);
-        return out;
-    } else {
-        return Status::Error("Convert error.");
+size_t CharsetInfo::getUtf8Charlength(const std::string& str) {
+    size_t length = 0;
+    for (size_t i = 0, len = 0; i < str.length(); i += len) {
+        unsigned char byte = str[i];
+        if (byte >= 0xFC) {
+            len = 6;
+        } else if (byte >= 0xF8) {
+            len = 5;
+        } else if (byte >= 0xF0) {
+            len = 4;
+        } else if (byte >= 0xE0) {
+            len = 3;
+        } else if (byte >= 0xC0) {
+            len = 2;
+        } else {
+            len = 1;
+        }
+        length++;
     }
+    return length;
 }
 
 
@@ -111,7 +106,7 @@ CharsetInfo::nebulaStrCmp(const std::string& collateName, const char* p1, const 
         return Status::Error("Collation `%s' not support", collateName.c_str());
     }
 
-    // For unset LC_ALL, May occur "locale::facet::_S_create_c_locale name not valid"
+    // For character set is incomplete in locale
     std::locale loc(iter->second);
     if (!std::has_facet<std::ctype<char>>(loc)) {
         return Status::Error("Locale: %s  environment is not supported", iter->second.c_str());

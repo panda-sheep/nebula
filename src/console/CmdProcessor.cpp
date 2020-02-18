@@ -7,6 +7,8 @@
 #include "base/Base.h"
 #include "console/CmdProcessor.h"
 #include "time/Duration.h"
+#include "charset/Charset.h"
+
 
 namespace nebula {
 namespace graph {
@@ -228,10 +230,14 @@ void CmdProcessor::calColumnWidths(
 #undef GET_VALUE_WIDTH
 
 
-void CmdProcessor::printResult(const cpp2::ExecutionResponse& resp) const {
+void CmdProcessor::printResult(cpp2::ExecutionResponse& resp) const {
     std::vector<size_t> widths;
     std::vector<std::string> formats;
 
+    auto ret = convertCurrentSpaceStr(resp);
+    if (!ret) {
+        return;
+    }
     calColumnWidths(resp, widths, formats);
 
     if (widths.size() == 0) {
@@ -268,6 +274,81 @@ void CmdProcessor::printHeader(
         std::cout << folly::stringPrintf(fmt.c_str(), cname.c_str());
     }
     std::cout << "\n";
+}
+
+
+bool CmdProcessor::convertCurrentSpaceStr(cpp2::ExecutionResponse& resp) const {
+    std::string curSpaceCharset;
+    auto *spaceCharset = resp.get_space_charset();
+    if (spaceCharset && !spaceCharset->empty()) {
+        curSpaceCharset = std::move(*spaceCharset);
+    } else {
+        curSpaceCharset = "utf8";
+    }
+    folly::toLowerAscii(curSpaceCharset);
+
+    // utf8 -> unicode
+    if (curSpaceCharset.compare("utf8") == 0) {
+        auto iter = CharsetInfo::charsetToLocale.find(curSpaceCharset);
+
+        // For character set is incomplete in locale
+        std::locale loc(iter->second);
+        if (!std::has_facet<std::ctype<char>>(loc)) {
+            std::cout << "[Error]:" << "Locale: " << iter->second
+                      << "current environment not support.\n";
+            return false;
+        }
+        // convert head
+        auto retColName = resp.get_column_names();
+        if (retColName != nullptr) {
+            std::vector<std::u32string> header;
+            for (auto &e : (*retColName)) {
+                auto ret = CharsetInfo::getCurrentSpaceStr(loc, e);
+                if (!ret.ok()) {
+                    std::cout <<  "[Error]:" <<ret.status().toString() << std::endl;
+                    return false;
+                }
+                header.push_back(ret.value());
+            }
+            resp.set_column_names(header);
+        }
+
+        // conver data
+        auto retRows = resp.get_rows();
+        if (retRows != nullptr) {
+            std::vector<cpp2::RowValue> rowsConv;
+
+            for (auto& row : (*retRows)) {
+                std::vector<cpp2::ColumnValue> rowConv;
+
+                auto columns = row.get_columns();
+                for (size_t i = 0; i < columns.size(); i++) {
+                    switch (columns[i].getType()) {
+                        case cpp2::ColumnValue::Type::str: {
+                            auto str = columns[i].get_str();
+                            auto ret = CharsetInfo::getCurrentSpaceStr(loc, str);
+                            if (!ret.ok()) {
+                                std::cout <<  "[Error]:" << ret.status().toString() << std::endl;
+                                return false;
+                            }
+                            rowConv.emplace_back();
+                            rowConv.back().set_str(ret.value());
+                            break;
+                        }
+                        default: {
+                            rowConv.push_back(columns[i]);
+                            break;
+                        }
+                    }
+                }
+
+                rowsConv.emplace_back();
+                rowsConv.back().set_columns(std::move(rowConv));
+            }
+            resp.set_rows(std::move(rowsConv));
+        }
+    }
+    return true;
 }
 
 

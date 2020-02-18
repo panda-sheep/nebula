@@ -28,23 +28,34 @@ public:
      * Check if charset is supported
      */
     static Status isSupportCharset(const std::string& charsetName);
+
     /**
      * Check if collation is supported
      */
     static Status isSupportCollate(const std::string& collateName);
+
     /**
      * check if charset and collation match
      */
     static Status charsetAndCollateMatch(const std::string& charsetName,
                                          const std::string& collateName);
+
     /**
      * Get the corresponding collation according to charset
      */
     static StatusOr<std::string> getDefaultCollationbyCharset(const std::string& charsetName);
+
     /**
      * Get the corresponding charset according to collation
      */
     static StatusOr<std::string> getCharsetbyCollation(const std::string& collationName);
+
+    /**
+     * Get the current space chareset string, only utf8 to unicode
+     */
+    static StatusOr<std::u32string> getCurrentSpaceStr(std::locale &loc,
+                                                       const std::string& fromStr);
+
     /**
      * Compare strings according to the collate of the specified locale
      */
@@ -69,7 +80,6 @@ public:
     static StatusOr<bool>
     nebulaStrCmpNE(const std::string& collateName, const char* p1, const char* p2);
 
-
     static std::unordered_set<std::string> supportCharset;
 
     static std::unordered_set<std::string> supportCollation;
@@ -77,6 +87,8 @@ public:
     static std::unordered_map<std::string, CharsetToCollation> charsetToCollation;
 
     static std::unordered_map<std::string, std::string> collateToLocale;
+
+    static std::unordered_map<std::string, std::string> charsetToLocale;
 };
 
 }   // namespace nebula

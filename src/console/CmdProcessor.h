@@ -42,7 +42,9 @@ private:
                          std::vector<size_t>& widths,
                          std::vector<std::string>& formats) const;
 
-    void printResult(const cpp2::ExecutionResponse& resp) const;
+    bool convertCurrentSpaceStr(cpp2::ExecutionResponse& resp) const;
+
+    void printResult(cpp2::ExecutionResponse& resp) const;
     void printHeader(const cpp2::ExecutionResponse& resp,
                      const std::vector<size_t>& widths) const;
     void printData(const cpp2::ExecutionResponse& resp,

@@ -46,6 +46,7 @@
 #include <cassert>
 #include <cmath>
 #include <locale>
+#include <cuchar>
 
 #include <gflags/gflags.h>
 

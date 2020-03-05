@@ -56,7 +56,6 @@ TEST_F(LdapAuthTest, SimpleBindAuth) {
 }
 
 
-/*
 TEST_F(LdapAuthTest, SimpleBindAuthWithTLS) {
     FLAGS_ldap_server = "127.0.0.1";
     FLAGS_ldap_port = 389;
@@ -84,7 +83,7 @@ TEST_F(LdapAuthTest, SimpleBindAuthWithTLS) {
         ASSERT_FALSE(ret);
     }
 }
-*/
+
 
 TEST_F(LdapAuthTest, SearchBindAuth) {
     FLAGS_ldap_server = "127.0.0.1";
@@ -115,7 +114,7 @@ TEST_F(LdapAuthTest, SearchBindAuth) {
     }
 }
 
-/*
+
 TEST_F(LdapAuthTest, SearchBindAuthWithTLS) {
     FLAGS_ldap_server = "127.0.0.1";
     FLAGS_ldap_port = 389;
@@ -145,7 +144,6 @@ TEST_F(LdapAuthTest, SearchBindAuthWithTLS) {
         ASSERT_FALSE(ret);
     }
 }
-*/
 
 }   // namespace graph
 }   // namespace nebula

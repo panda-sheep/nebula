@@ -6,7 +6,6 @@
 
 #include "graph/LdapAuthenticator.h"
 #include "graph/GraphFlags.h"
-#define LDAP_DEPRECATED 1
 
 namespace nebula {
 namespace graph {
@@ -101,7 +100,7 @@ Status LdapAuthenticator::initLDAPConnection() {
 
     // initialize the LDAP ldap://host[:port] host[:port]
     auto ret = ldap_initialize(&ldap_, uris.c_str());
-    if (ret != LDAP_SUCCESS) {
+    if (ret != LDAP_SUCCESS || !ldap_) {
         return Status::Error("Init LDAP failed.");
     }
 

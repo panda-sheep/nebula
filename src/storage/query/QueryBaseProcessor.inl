@@ -192,7 +192,7 @@ QueryBaseProcessor<REQ, RESP>::getEdgeTTLInfo(EdgeType edgeType) {
 }
 
 template<typename REQ, typename RESP>
-bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
+bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp, bool onlyVertex) {
     switch (exp->kind()) {
         case Expression::kPrimary:
             return true;
@@ -206,7 +206,7 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
                 return false;
             }
             for (auto& arg : args) {
-                if (!checkExp(arg)) {
+                if (!checkExp(arg, onlyVertex)) {
                     return false;
                 }
             }
@@ -215,23 +215,23 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
         }
         case Expression::kUnary: {
             auto* unaExp = static_cast<const UnaryExpression*>(exp);
-            return checkExp(unaExp->operand());
+            return checkExp(unaExp->operand(), onlyVertex);
         }
         case Expression::kTypeCasting: {
             auto* typExp = static_cast<const TypeCastingExpression*>(exp);
-            return checkExp(typExp->operand());
+            return checkExp(typExp->operand(), onlyVertex);
         }
         case Expression::kArithmetic: {
             auto* ariExp = static_cast<const ArithmeticExpression*>(exp);
-            return checkExp(ariExp->left()) && checkExp(ariExp->right());
+            return checkExp(ariExp->left(), onlyVertex) && checkExp(ariExp->right(), onlyVertex);
         }
         case Expression::kRelational: {
             auto* relExp = static_cast<const RelationalExpression*>(exp);
-            return checkExp(relExp->left()) && checkExp(relExp->right());
+            return checkExp(relExp->left(), onlyVertex) && checkExp(relExp->right(), onlyVertex);
         }
         case Expression::kLogical: {
             auto* logExp = static_cast<const LogicalExpression*>(exp);
-            return checkExp(logExp->left()) && checkExp(logExp->right());
+            return checkExp(logExp->left(), onlyVertex) && checkExp(logExp->right(), onlyVertex);
         }
         case Expression::kSourceProp: {
             auto* sourceExp = static_cast<const SourcePropertyExpression*>(exp);
@@ -275,9 +275,17 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
         case Expression::kEdgeDstId:
         case Expression::kEdgeSrcId:
         case Expression::kEdgeType: {
+            if (onlyVertex) {
+                VLOG(1) << "only handle vertex tag props";
+                return false;
+            }
             return true;
         }
         case Expression::kAliasProp: {
+            if (onlyVertex) {
+                VLOG(1) << "only handle vertex tag props";
+                return false;
+            }
             if (edgeContexts_.empty()) {
                 VLOG(1) << "No edge requested!";
                 return false;

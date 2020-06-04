@@ -336,7 +336,7 @@ cpp2::ErrorCode UpdateVertexProcessor::checkAndBuildContexts(
         auto colExp = std::move(colExpRet).value();
         colExp->setContext(this->expCtx_.get());
         auto status = colExp->prepare();
-        if (!status.ok() || !this->checkExp(colExp.get())) {
+        if (!status.ok() || !this->checkExp(colExp.get(), true)) {
             return cpp2::ErrorCode::E_INVALID_UPDATER;
         }
         returnColumnsExp_.emplace_back(std::move(colExp));
@@ -353,7 +353,7 @@ cpp2::ErrorCode UpdateVertexProcessor::checkAndBuildContexts(
         this->exp_ = std::move(expRet).value();
         this->exp_->setContext(this->expCtx_.get());
         auto status = this->exp_->prepare();
-        if (!status.ok() || !this->checkExp(this->exp_.get())) {
+        if (!status.ok() || !this->checkExp(this->exp_.get(), true)) {
             return cpp2::ErrorCode::E_INVALID_FILTER;
         }
     }
@@ -366,7 +366,7 @@ cpp2::ErrorCode UpdateVertexProcessor::checkAndBuildContexts(
                                                new std::string(item.get_prop()));
         sourcePropExp.setContext(this->expCtx_.get());
         auto status = sourcePropExp.prepare();
-        if (!status.ok() || !this->checkExp(&sourcePropExp)) {
+        if (!status.ok() || !this->checkExp(&sourcePropExp, true)) {
             return cpp2::ErrorCode::E_INVALID_UPDATER;
         }
         auto tagRet = this->schemaMan_->toTagID(this->spaceId_, name);
@@ -388,7 +388,7 @@ cpp2::ErrorCode UpdateVertexProcessor::checkAndBuildContexts(
         auto vexp = std::move(exp).value();
         vexp->setContext(this->expCtx_.get());
         status = vexp->prepare();
-        if (!status.ok() || !this->checkExp(vexp.get())) {
+        if (!status.ok() || !this->checkExp(vexp.get(), true)) {
             return cpp2::ErrorCode::E_INVALID_UPDATER;
         }
     }

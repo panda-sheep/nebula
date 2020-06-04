@@ -114,7 +114,7 @@ protected:
 
     int32_t getBucketsNum(int32_t verticesNum, int32_t minVerticesPerBucket, int32_t handlerNum);
 
-    bool checkExp(const Expression* exp);
+    bool checkExp(const Expression* exp, bool onlyVertex = false);
 
     void buildTTLInfoAndRespSchema();
 
